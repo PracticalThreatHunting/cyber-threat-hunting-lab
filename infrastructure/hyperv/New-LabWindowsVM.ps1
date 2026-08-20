@@ -1,12 +1,12 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
 param(
     [Parameter(Mandatory)] [string] $IsoPath,
-    [string] $VmName = 'TH-LAB-WIN11',
-    [string] $SwitchName = 'TH-LAB-NAT',
+    [string] $VmName = 'CTH-WIN11',
+    [string] $SwitchName = 'CyberLab-Internal',
     [string] $VmRoot = "$env:ProgramData\PracticalThreatHunting\VMs",
-    [int] $MemoryGB = 10,
+    [int] $MemoryGB = 8,
     [int] $Vcpu = 4,
-    [int] $DiskGB = 120
+    [int] $DiskGB = 100
 )
 
 $ErrorActionPreference = 'Stop'
@@ -37,7 +37,7 @@ if ($PSCmdlet.ShouldProcess($VmName, 'Create isolated Windows 11 Hyper-V lab VM'
     New-VHD -Path $vhdPath -SizeBytes (${DiskGB}GB) -Dynamic | Out-Null
     $vm = New-VM -Name $VmName -Generation 2 -MemoryStartupBytes (${MemoryGB}GB) -VHDPath $vhdPath -SwitchName $SwitchName -Path $vmDir
     Set-VMProcessor -VMName $VmName -Count $Vcpu
-    Set-VMMemory -VMName $VmName -DynamicMemoryEnabled $true -MinimumBytes 4GB -StartupBytes (${MemoryGB}GB) -MaximumBytes 14GB
+    Set-VMMemory -VMName $VmName -DynamicMemoryEnabled $true -MinimumBytes 4GB -StartupBytes (${MemoryGB}GB) -MaximumBytes 12GB
     Set-VM -VMName $VmName -AutomaticCheckpointsEnabled $false -CheckpointType Production
     Set-VMFirmware -VMName $VmName -EnableSecureBoot On -SecureBootTemplate 'MicrosoftWindows'
 
@@ -48,6 +48,7 @@ if ($PSCmdlet.ShouldProcess($VmName, 'Create isolated Windows 11 Hyper-V lab VM'
 
     Write-Host "Created $VmName" -ForegroundColor Green
     Write-Host "ISO: $IsoPath"
+    Write-Host "Switch: $SwitchName"
     Write-Host "RAM: $MemoryGB GB | vCPU: $Vcpu | Disk: $DiskGB GB"
     Write-Host 'Start the VM to install Windows. Automated guest provisioning is handled separately.'
 }
