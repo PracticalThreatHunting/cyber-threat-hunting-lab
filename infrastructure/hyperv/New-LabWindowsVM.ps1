@@ -31,13 +31,15 @@ if (Get-VM -Name $VmName -ErrorAction SilentlyContinue) {
 
 $vmDir = Join-Path $VmRoot $VmName
 $vhdPath = Join-Path $vmDir "$VmName.vhdx"
+$diskBytes = $DiskGB * 1GB
+$memoryBytes = $MemoryGB * 1GB
 New-Item -ItemType Directory -Path $vmDir -Force | Out-Null
 
 if ($PSCmdlet.ShouldProcess($VmName, 'Create isolated Windows 11 Hyper-V lab VM')) {
-    New-VHD -Path $vhdPath -SizeBytes (${DiskGB}GB) -Dynamic | Out-Null
-    $vm = New-VM -Name $VmName -Generation 2 -MemoryStartupBytes (${MemoryGB}GB) -VHDPath $vhdPath -SwitchName $SwitchName -Path $vmDir
+    New-VHD -Path $vhdPath -SizeBytes $diskBytes -Dynamic | Out-Null
+    $vm = New-VM -Name $VmName -Generation 2 -MemoryStartupBytes $memoryBytes -VHDPath $vhdPath -SwitchName $SwitchName -Path $vmDir
     Set-VMProcessor -VMName $VmName -Count $Vcpu
-    Set-VMMemory -VMName $VmName -DynamicMemoryEnabled $true -MinimumBytes 4GB -StartupBytes (${MemoryGB}GB) -MaximumBytes 12GB
+    Set-VMMemory -VMName $VmName -DynamicMemoryEnabled $true -MinimumBytes 4GB -StartupBytes $memoryBytes -MaximumBytes 12GB
     Set-VM -VMName $VmName -AutomaticCheckpointsEnabled $false -CheckpointType Production
     Set-VMFirmware -VMName $VmName -EnableSecureBoot On -SecureBootTemplate 'MicrosoftWindows'
 
