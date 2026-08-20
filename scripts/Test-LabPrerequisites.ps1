@@ -27,7 +27,19 @@ Add-Result 'Windows 11' ($os.Caption -match 'Windows 11') $os.Caption
 Add-Result 'Windows Pro/Enterprise' ($os.Caption -match 'Pro|Enterprise|Education') $os.Caption
 Add-Result 'RAM >= 24 GB' ($computer.TotalPhysicalMemory -ge 24GB) ('{0:N1} GB' -f ($computer.TotalPhysicalMemory / 1GB))
 Add-Result 'Free disk >= 250 GB' ($disk.FreeSpace -ge 250GB) ('{0:N1} GB free' -f ($disk.FreeSpace / 1GB))
-Add-Result 'CPU virtualization capable' ([bool]$cpu.VirtualizationFirmwareEnabled) "Firmware virtualization: $($cpu.VirtualizationFirmwareEnabled)"
+
+# Win32_Processor.VirtualizationFirmwareEnabled may report False once the Hyper-V
+# hypervisor is already active. Treat an active hypervisor as authoritative proof
+# that hardware virtualization is available and enabled.
+$hypervisorPresent = [bool]$computer.HypervisorPresent
+$firmwareVirtualization = [bool]$cpu.VirtualizationFirmwareEnabled
+$virtualizationReady = $hypervisorPresent -or $firmwareVirtualization
+$virtualizationDetail = if ($hypervisorPresent) {
+    'Hypervisor detected and running'
+} else {
+    "Firmware virtualization: $firmwareVirtualization"
+}
+Add-Result 'CPU virtualization ready' $virtualizationReady $virtualizationDetail
 
 foreach ($command in $Config.RequiredCommands) {
     $resolved = Get-Command $command -ErrorAction SilentlyContinue
